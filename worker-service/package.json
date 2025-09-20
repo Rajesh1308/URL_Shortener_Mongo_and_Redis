@@ -1,0 +1,17 @@
+{
+  "name": "worker-service",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Rajesh A",
+  "type": "module",
+  "main": "dbUpdater.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bullmq": "^5.58.7",
+    "mongoose": "^8.18.1",
+    "redis": "^5.8.2"
+  }
+}

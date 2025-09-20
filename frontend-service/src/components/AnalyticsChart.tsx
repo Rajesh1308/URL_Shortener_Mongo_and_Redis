@@ -1,0 +1,151 @@
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { format, subDays } from 'date-fns';
+
+interface URLData {
+  id: string;
+  originalUrl: string;
+  shortUrl: string;
+  clicks: number;
+  createdAt: string;
+  title?: string;
+}
+
+interface AnalyticsChartProps {
+  selectedUrl: URLData;
+}
+
+export const AnalyticsChart = ({ selectedUrl }: AnalyticsChartProps) => {
+  // Generate mock analytics data for the last 30 days
+  const generateAnalyticsData = () => {
+    const data = [];
+    const today = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = subDays(today, i);
+      const clicks = Math.floor(Math.random() * (selectedUrl.clicks / 10) + Math.random() * 50);
+      
+      data.push({
+        date: format(date, 'MMM dd'),
+        fullDate: format(date, 'yyyy-MM-dd'),
+        clicks: clicks,
+        cumulativeClicks: data.reduce((sum, d) => sum + d.clicks, 0) + clicks,
+      });
+    }
+    
+    return data;
+  };
+
+  const analyticsData = generateAnalyticsData();
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glass-card p-3 border border-border/50 shadow-card">
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-sm text-primary">
+            Clicks: <span className="font-semibold">{payload[0].value}</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass-card p-4 rounded-lg border border-border/50">
+          <div className="text-2xl font-bold text-primary">{selectedUrl.clicks.toLocaleString()}</div>
+          <div className="text-sm text-muted-foreground">Total Clicks</div>
+        </div>
+        <div className="glass-card p-4 rounded-lg border border-border/50">
+          <div className="text-2xl font-bold text-primary">
+            {Math.round(selectedUrl.clicks / 30)}
+          </div>
+          <div className="text-sm text-muted-foreground">Daily Average</div>
+        </div>
+        <div className="glass-card p-4 rounded-lg border border-border/50">
+          <div className="text-2xl font-bold text-primary">
+            {Math.max(...analyticsData.map(d => d.clicks))}
+          </div>
+          <div className="text-sm text-muted-foreground">Peak Day</div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="h-80 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={analyticsData}
+            margin={{
+              top: 10,
+              right: 30,
+              left: 0,
+              bottom: 0,
+            }}
+          >
+            <defs>
+              <linearGradient id="clicksGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="hsl(var(--border))" 
+              strokeOpacity={0.3}
+            />
+            <XAxis 
+              dataKey="date" 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="clicks"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              fill="url(#clicksGradient)"
+              fillOpacity={1}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* URL Details */}
+      <div className="glass-card p-4 rounded-lg border border-border/50 space-y-2">
+        <div className="text-sm font-medium">URL Details</div>
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div>
+            <span className="font-medium">Short URL:</span> 
+            <code className="ml-2 bg-muted/50 px-2 py-1 rounded text-xs">
+              {selectedUrl.shortUrl}
+            </code>
+          </div>
+          <div>
+            <span className="font-medium">Original URL:</span> 
+            <code className="ml-2 bg-muted/50 px-2 py-1 rounded text-xs break-all">
+              {selectedUrl.originalUrl}
+            </code>
+          </div>
+          <div>
+            <span className="font-medium">Created:</span> 
+            <span className="ml-2">
+              {format(new Date(selectedUrl.createdAt), 'PPP')}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

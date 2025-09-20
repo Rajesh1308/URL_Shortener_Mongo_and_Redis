@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: "redis"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+
+  mongodb:
+    image: "mongo:6"
+    container_name: "mongo"
+    ports:
+      - "5010:27017"
+
+  express-service:
+    build: ./express-service
+    container_name: express-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "redis"
+      - "mongodb"
+
+  worker-service:
+    build: ./worker-service
+    container_name: worker-service
+    depends_on:
+      - redis
+      - mongodb
