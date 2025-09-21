@@ -6,13 +6,12 @@ export async function connectToMongoDB(url) {
 }
 
 export const client = createClient({
-  url: "redis://redis:6379",
+  url: "redis://localhost:6379",
 });
 
 export async function connectToRedis() {
   client.on("error", (err) => console.log("Redis Client Error", err));
 
   await client.connect();
-
   console.log("Redis connected");
 }

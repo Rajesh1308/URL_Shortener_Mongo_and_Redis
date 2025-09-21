@@ -7,7 +7,7 @@ import { connectToMongoDB } from "./connect.js";
 //   .then(() => console.log("MongoDB connected"))
 //   .catch(() => console.log("MongoDB connection failed"));
 
-connectToMongoDB("mongodb://mongo:27017/short-urls").then(
+connectToMongoDB("mongodb://localhost:27017/short-urls").then(
   console.log("Mongo DB connected")
 );
 const worker = new Worker(
@@ -30,7 +30,7 @@ const worker = new Worker(
   },
   {
     connection: {
-      host: "redis",
+      host: "localhost",
       port: 6379,
     },
   }

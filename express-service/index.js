@@ -2,39 +2,28 @@ import express from "express";
 import { connectToMongoDB, connectToRedis } from "./connect.js";
 import router from "./routes/url.js";
 import URL from "./models/url.js";
+import authRouter from "./routes/authRoutes.js";
+import { configDotenv } from "dotenv";
+configDotenv();
+import cookieParser from "cookie-parser";
+import { handleUrlRedirect } from "./controllers/url.js";
 
 const app = express();
-const port = 8000;
+const port = 8001;
 
 app.use(express.json());
+app.use(cookieParser());
 
-connectToMongoDB("mongodb://mongo:27017/short-urls").then(
+connectToMongoDB("mongodb://localhost:27017/short-urls").then(
   console.log("Mongo DB connected")
 );
 
 connectToRedis();
 
 app.use("/url", router);
+app.use("/auth", authRouter);
 
-app.get("/:shortId", async (req, res) => {
-  const shortId = req.params.shortId;
-  const entry = await URL.findOneAndUpdate(
-    {
-      shortId,
-    },
-    {
-      $push: {
-        visitHistory: {
-          timestamp: Date.now(),
-        },
-      },
-    }
-  );
-  if (!entry) {
-    return res.status(404).json({ error: "Short URL not found" });
-  }
-  res.redirect(entry.redirectUrl);
-});
+app.get("/:shortId", handleUrlRedirect);
 
 app.get("/", (req, res) => {
   res.send("All good here");

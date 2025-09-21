@@ -10,9 +10,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "bullmq": "^5.58.7",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1",
     "nanoid": "^5.1.5",
     "nodemon": "^3.1.10",
