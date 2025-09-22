@@ -21,6 +21,7 @@ services:
       - REDIS_HOST_URL=redis://redis:6379
       - REDIS_HOST=redis
       - MONGODB_HOST_URL=mongodb://mongo:27017
+      - HOST_URL=http://localhost:8000/
     depends_on:
       - "redis"
       - "mongodb"

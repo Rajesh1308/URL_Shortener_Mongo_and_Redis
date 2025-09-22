@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const urlSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      required: true,
+    },
     shortId: {
       type: String,
       required: true,

@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, ExternalLink, Edit, Trash2, MousePointer } from "lucide-react";
@@ -18,12 +25,39 @@ interface URLData {
 interface URLTableProps {
   urls: URLData[];
   onSelectUrl: (url: URLData) => void;
+  onEditUrl: (id: string) => void;
   onDeleteUrl: (id: string) => void;
   selectedUrl: URLData | null;
 }
 
-export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTableProps) => {
+export const URLTable = ({
+  urls,
+  onSelectUrl,
+  onEditUrl,
+  onDeleteUrl,
+  selectedUrl,
+}: URLTableProps) => {
   const { toast } = useToast();
+  const [openEditModel, setOpenEditModel] = useState(false);
+  const [newUrl, setNewUrl] = useState();
+  // --- add these states at the top of your component ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // adjust as needed
+
+  // Calculate paginated data
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUrls = urls.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(urls.length / itemsPerPage);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -41,8 +75,12 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
     }
   };
 
+  const showEditModel = () => {
+    setOpenEditModel(true);
+  };
+
   const openUrl = (url: string) => {
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   const formatUrl = (url: string, maxLength: number = 50) => {
@@ -65,11 +103,13 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
             </TableRow>
           </TableHeader>
           <TableBody>
-            {urls.map((url) => (
+            {currentUrls.map((url) => (
               <TableRow
                 key={url.id}
                 className={`cursor-pointer transition-luxury hover:bg-muted/50 border-border/50 ${
-                  selectedUrl?.id === url.id ? 'bg-accent/30 ring-1 ring-border glow-effect' : ''
+                  selectedUrl?.id === url.id
+                    ? "bg-accent/30 ring-1 ring-border glow-effect"
+                    : ""
                 }`}
                 onClick={() => onSelectUrl(url)}
               >
@@ -116,13 +156,18 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Badge variant="secondary" className="bg-accent/50 text-accent-foreground">
+                  <Badge
+                    variant="secondary"
+                    className="bg-accent/50 text-accent-foreground"
+                  >
                     <MousePointer className="h-3 w-3 mr-1" />
                     {url.clicks.toLocaleString()}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {formatDistanceToNow(new Date(url.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(url.createdAt), {
+                    addSuffix: true,
+                  })}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-1">
@@ -131,11 +176,7 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
                       variant="ghost"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Edit functionality would go here
-                        toast({
-                          title: "Edit URL",
-                          description: "Edit functionality coming soon!",
-                        });
+                        onEditUrl(url.id);
                       }}
                       className="h-8 w-8 p-0 hover:bg-accent"
                     >
@@ -156,6 +197,8 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
                 </TableCell>
               </TableRow>
             ))}
+
+            {/* Pagination Row */}
           </TableBody>
         </Table>
       </div>
@@ -166,7 +209,32 @@ export const URLTable = ({ urls, onSelectUrl, onDeleteUrl, selectedUrl }: URLTab
             <MousePointer className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium mb-2">No URLs yet</h3>
-          <p className="text-muted-foreground">Create your first shortened URL to get started</p>
+          <p className="text-muted-foreground">
+            Create your first shortened URL to get started
+          </p>
+        </div>
+      )}
+      {urls.length > 5 && (
+        <div className="flex justify-center items-center space-x-4">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={currentPage === 1}
+            onClick={handlePrevPage}
+          >
+            Prev
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={currentPage === totalPages}
+            onClick={handleNextPage}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,76 +37,161 @@ interface URLData {
 const Dashboard = () => {
   const [longUrl, setLongUrl] = useState("");
   const [customAlias, setCustomAlias] = useState("");
+  const [title, setTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editUrlValue, setEditUrlValue] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [refresh, setRefresh] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [urls, setUrls] = useState<URLData[]>([
     {
       id: "1",
-      originalUrl: "https://github.com/vercel/next.js",
-      shortUrl: "https://short.ly/gh-next",
-      clicks: 1247,
+      originalUrl: "",
+      shortUrl: "",
+      clicks: 0,
       createdAt: "2024-01-15T10:30:00Z",
-      title: "Next.js Repository",
-    },
-    {
-      id: "2",
-      originalUrl: "https://docs.react.dev/learn",
-      shortUrl: "https://short.ly/react-docs",
-      clicks: 892,
-      createdAt: "2024-01-14T14:22:00Z",
-      title: "React Documentation",
-    },
-    {
-      id: "3",
-      originalUrl: "https://tailwindcss.com/docs/installation",
-      shortUrl: "https://short.ly/tw-install",
-      clicks: 564,
-      createdAt: "2024-01-13T09:15:00Z",
-      title: "Tailwind CSS Installation",
+      title: "",
     },
   ]);
+
+  useEffect(() => {
+    const fetchUrls = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/url/get-urls`, {
+          withCredentials: true,
+        });
+        console.log("Response : ", response.data);
+        const urlData = response.data.message;
+        const sortedUrlData = urlData.sort(
+          (a: URLData, b: URLData) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setUrls(sortedUrlData);
+      } catch (e) {
+        console.log("Error : ", e.message);
+      }
+    };
+
+    fetchUrls();
+  }, [refresh]);
 
   const handleCreateUrl = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
+    console.log(customAlias);
 
     // Simulate API call
-    setTimeout(() => {
-      const newUrl: URLData = {
-        id: Date.now().toString(),
-        originalUrl: longUrl,
-        shortUrl: `https://short.ly/${
-          customAlias || Math.random().toString(36).substr(2, 8)
-        }`,
-        clicks: 0,
-        createdAt: new Date().toISOString(),
-        title: customAlias || "New URL",
-      };
-
-      setUrls((prev) => [newUrl, ...prev]);
-      setLongUrl("");
-      setCustomAlias("");
-      setIsCreating(false);
-
-      toast({
-        title: "URL created successfully!",
-        description: "Your shortened URL is ready to use.",
+    try {
+      let payload, url;
+      if (customAlias === "") {
+        console.log("No custom alias");
+        payload = {
+          url: longUrl,
+          title: title,
+        };
+        url = `${API_URL}/url`;
+      } else {
+        console.log("Create custom alias");
+        payload = {
+          redirectUrl: longUrl,
+          title: title,
+          customId: customAlias,
+        };
+        url = `${API_URL}/url/custom`;
+      }
+      const response = await axios.post(url, payload, {
+        withCredentials: true,
       });
-    }, 1000);
+      console.log(response.data);
+      if (response.data.success) {
+        setRefresh((prev) => !prev);
+        toast({
+          title: "URL created successfully!",
+          description: "Your shortened URL is ready to use.",
+        });
+      } else {
+        toast({
+          title: "Failed to shorten the URL",
+          description: response.data.error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (e) {
+      console.log("Error : ", e.message);
+    }
   };
 
-  const handleDeleteUrl = (id: string) => {
-    setUrls((prev) => prev.filter((url) => url.id !== id));
-    if (selectedUrl?.id === id) {
-      setSelectedUrl(null);
+  const handleEditUrl = async (id: string) => {
+    console.log("Edit Url - ", id);
+    setOpenEditModal(true);
+    setSelectedId(id);
+  };
+
+  const handleUpdateUrl = async (url: string) => {
+    console.log("Want to edit = ", selectedId, url);
+    try {
+      const response = await axios.put(
+        `${API_URL}/url/updateUrl`,
+        {
+          shortId: selectedId,
+          newUrl: url,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      if (response.data.success) {
+        setRefresh((prev) => !prev);
+        toast({
+          title: "URL updated",
+          description: "The Original URL is updated",
+        });
+      } else {
+        toast({
+          title: "Failed to update",
+          description: "The Original URL is not updated",
+          variant: "destructive",
+        });
+      }
+      console.log(response.data);
+      setOpenEditModal(false);
+    } catch (e) {
+      console.log("Error : ", e.message);
     }
-    toast({
-      title: "URL deleted",
-      description: "The URL has been removed from your dashboard.",
-    });
+  };
+
+  const handleDeleteUrl = async (id: string) => {
+    try {
+      const response = await axios.delete(`${API_URL}/url/delete`, {
+        data: {
+          shortId: id,
+        },
+        withCredentials: true,
+      });
+      if (response.data.success) {
+        setUrls((prev) => prev.filter((url) => url.id !== id));
+        if (selectedUrl?.id === id) {
+          setSelectedUrl(null);
+        }
+        setRefresh((prev) => !prev);
+        toast({
+          title: "URL deleted",
+          description: "The URL has been removed from your dashboard.",
+        });
+      } else {
+        toast({
+          title: "URL deletion failed",
+          description: response.data.error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (e) {
+      console.log("Error : ", e.message);
+    }
   };
 
   const handleLogout = () => {
@@ -169,6 +254,18 @@ const Dashboard = () => {
             <form onSubmit={handleCreateUrl} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    type="text"
+                    placeholder="My LinkedIn Profile"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="transition-luxury focus:glow-effect"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="longUrl">Long URL</Label>
                   <Input
                     id="longUrl"
@@ -180,17 +277,17 @@ const Dashboard = () => {
                     className="transition-luxury focus:glow-effect"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customAlias">Custom Alias (Optional)</Label>
-                  <Input
-                    id="customAlias"
-                    type="text"
-                    placeholder="my-custom-link"
-                    value={customAlias}
-                    onChange={(e) => setCustomAlias(e.target.value)}
-                    className="transition-luxury focus:glow-effect"
-                  />
-                </div>
+              </div>
+              <div className="space-y-2 w-[40vh]">
+                <Label htmlFor="customAlias">Custom Alias (Optional)</Label>
+                <Input
+                  id="customAlias"
+                  type="text"
+                  placeholder="my-custom-link"
+                  value={customAlias}
+                  onChange={(e) => setCustomAlias(e.target.value)}
+                  className="transition-luxury focus:glow-effect"
+                />
               </div>
               <Button
                 type="submit"
@@ -218,6 +315,7 @@ const Dashboard = () => {
             <URLTable
               urls={urls}
               onSelectUrl={setSelectedUrl}
+              onEditUrl={handleEditUrl}
               onDeleteUrl={handleDeleteUrl}
               selectedUrl={selectedUrl}
             />
@@ -240,6 +338,39 @@ const Dashboard = () => {
           </Card>
         )}
       </div>
+      {openEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-black border border-grey-500 rounded-lg shadow-lg w-full max-w-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Edit URL</h2>
+            <div className="mb-4">
+              <label htmlFor="editUrl" className="block mb-1 font-small">
+                Original URL
+              </label>
+              <input
+                id="editUrl"
+                type="text"
+                value={editUrlValue}
+                onChange={(e) => setEditUrlValue(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 bg-black focus:outline-none focus:ring-2 focus:ring-white"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setOpenEditModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded text-black hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => editUrlValue && handleUpdateUrl(editUrlValue)}
+                className="px-4 py-2 border border-white bg-black text-white rounded hover:bg-white hover:text-black"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

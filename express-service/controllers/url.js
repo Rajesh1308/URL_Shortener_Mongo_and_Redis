@@ -14,11 +14,12 @@ const dbUpdateQueue = new Queue("db-update", {
 
 export const handleGenerateNewShortURL = async (req, res) => {
   const body = req.body;
-  //   if (!body.url) {
-  //     return res.status(400).json({ error: "url is required" });
-  //   }
+  if (!body.url || !body.title) {
+    return res.status(400).json({ error: "url and title is required" });
+  }
   const shortID = nanoid(8);
   await URL.create({
+    title: body.title,
     shortId: shortID,
     redirectUrl: body.url,
     visitHistory: [],
@@ -28,12 +29,23 @@ export const handleGenerateNewShortURL = async (req, res) => {
   return res.json({
     success: true,
     message: `Short ID Created - ${shortID}`,
+    shortId: shortID,
   });
 };
 
 export const handleCustomShortId = async (req, res) => {
   const customId = req.body.customId;
   const redirectUrl = req.body.redirectUrl;
+  const title = req.body.title;
+
+  if (!customId || !redirectUrl || !title) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Missing required arguments",
+      },
+    });
+  }
 
   const isExist = await URL.findOne({ shortId: customId });
   if (isExist) {
@@ -45,6 +57,7 @@ export const handleCustomShortId = async (req, res) => {
     });
   }
   const entry = await URL.create({
+    title: title,
     shortId: customId,
     redirectUrl: redirectUrl,
     visitHistory: [],
@@ -126,6 +139,7 @@ export const handleUrlRedirect = async (req, res) => {
 
 export const handleGetUrls = async (req, res) => {
   const userId = req.userId;
+  console.log("USER ID - ", userId);
   if (!userId) {
     return res.json({
       success: false,
@@ -134,13 +148,21 @@ export const handleGetUrls = async (req, res) => {
       },
     });
   }
-  console.log("USER-ID = ", userId);
-  const urls = await URL.find({ createdBy: userId });
-  const message = {
+  const urls = await URL.find({
+    createdBy: new mongoose.Types.ObjectId(userId),
+  });
+  const transformed = urls.map((urlDoc, index) => ({
+    id: urlDoc.shortId, // Or use urlDoc._id.toString() if you want unique
+    originalUrl: urlDoc.redirectUrl,
+    shortUrl: `${process.env.HOST_URL}${urlDoc.shortId}`, // change domain as per your frontend
+    clicks: urlDoc.visitHistory.length,
+    createdAt: urlDoc.createdAt,
+    title: urlDoc.title, // you could add a proper title extraction later
+  }));
+  return res.status(200).json({
     success: true,
-    message: urls,
-  };
-  return res.json(message);
+    message: transformed,
+  });
 };
 
 export const handleDeleteUrl = async (req, res) => {
