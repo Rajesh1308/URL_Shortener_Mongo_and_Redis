@@ -1,13 +1,10 @@
 import { Worker } from "bullmq";
 import URL from "./models/url.js";
 import { connectToMongoDB } from "./connect.js";
+import { configDotenv } from "dotenv";
+configDotenv();
 
-// mongoose
-//   .connect("mongodb://localhost:5010/short-urls")
-//   .then(() => console.log("MongoDB connected"))
-//   .catch(() => console.log("MongoDB connection failed"));
-
-connectToMongoDB("mongodb://localhost:27017/short-urls").then(
+connectToMongoDB(process.env.MONGODB_HOST_URL).then(
   console.log("Mongo DB connected")
 );
 const worker = new Worker(
@@ -30,7 +27,7 @@ const worker = new Worker(
   },
   {
     connection: {
-      host: "localhost",
+      host: process.env.REDIS_HOST,
       port: 6379,
     },
   }

@@ -3,11 +3,22 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Link2, Eye, EyeOff } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Signup = () => {
+  const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +30,7 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -32,15 +43,36 @@ const Signup = () => {
     setIsLoading(true);
 
     // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Account created successfully!",
-        description: "Welcome to your URL shortener. You can now sign in.",
-      });
-      // In real app, redirect to login or dashboard
-      window.location.href = "/login";
-    }, 1500);
+    const signupRequest = async () => {
+      try {
+        const response = await axios.post(
+          `${API_URL}/auth/signup`,
+          {
+            name: name,
+            email: email,
+            password: password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+        console.log(response.data);
+        if (response.data.success) {
+          navigate("/login");
+        } else {
+          toast({
+            title: "Signup failed",
+            description: response.data.error.message,
+            variant: "destructive",
+          });
+        }
+      } catch (e) {
+        console.log("Error : ", e.message);
+      }
+    };
+
+    signupRequest();
+    setIsLoading(false);
   };
 
   return (
@@ -51,7 +83,9 @@ const Signup = () => {
             <Link2 className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-          <p className="text-muted-foreground">Start shortening URLs in seconds</p>
+          <p className="text-muted-foreground">
+            Start shortening URLs in seconds
+          </p>
         </div>
 
         <Card className="glass-card border-border/50 shadow-luxury">
@@ -152,7 +186,10 @@ const Signup = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link to="/login" className="text-primary hover:underline transition-smooth">
+                <Link
+                  to="/login"
+                  className="text-primary hover:underline transition-smooth"
+                >
                   Sign in here
                 </Link>
               </p>

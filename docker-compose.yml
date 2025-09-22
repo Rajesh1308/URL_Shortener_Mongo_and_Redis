@@ -8,14 +8,19 @@ services:
   mongodb:
     image: "mongo:6"
     container_name: "mongo"
-    ports:
-      - "5010:27017"
 
   express-service:
     build: ./express-service
     container_name: express-service
     ports:
       - "8000:8000"
+    environment:
+      - JWT_SECRET=7ee4c60b7dd79bc474dca37f4a64e891e696ff0ff5ca950
+      - PORT=8000
+      - NODE_ENV=developement
+      - REDIS_HOST_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - MONGODB_HOST_URL=mongodb://mongo:27017
     depends_on:
       - "redis"
       - "mongodb"
@@ -23,6 +28,10 @@ services:
   worker-service:
     build: ./worker-service
     container_name: worker-service
+    environment:
+      - REDIS_HOST_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - MONGODB_HOST_URL=mongodb://mongo:27017
     depends_on:
       - redis
       - mongodb

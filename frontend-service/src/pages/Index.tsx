@@ -23,20 +23,28 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Transform your long URLs into powerful, trackable short links with detailed analytics and professional management tools.
+              Transform your long URLs into powerful, trackable short links with
+              detailed analytics and professional management tools.
             </p>
           </div>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
             <Link to="/signup">
-              <Button size="lg" className="text-lg px-8 py-6 transition-luxury glow-effect hover:shadow-luxury group">
-                Get Started Free
+              <Button
+                size="lg"
+                className="text-lg px-8 py-6 transition-luxury glow-effect hover:shadow-luxury group"
+              >
+                Get Started
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
             <Link to="/login">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6 transition-luxury hover:glow-effect">
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-6 transition-luxury hover:glow-effect"
+              >
                 Sign In
               </Button>
             </Link>
@@ -49,23 +57,30 @@ const Index = () => {
                 <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Lightning Fast</h3>
-              <p className="text-muted-foreground">Create shortened URLs instantly with our optimized infrastructure.</p>
+              <p className="text-muted-foreground">
+                Create shortened URLs instantly with our service.
+              </p>
             </div>
-            
+
             <div className="glass-card p-6 rounded-2xl border border-border/50 transition-luxury hover:glow-effect">
               <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
                 <BarChart3 className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Detailed Analytics</h3>
-              <p className="text-muted-foreground">Track clicks, analyze traffic patterns, and measure your success.</p>
+              <p className="text-muted-foreground">
+                Track clicks, analyze traffic patterns, and measure your
+                success.
+              </p>
             </div>
-            
+
             <div className="glass-card p-6 rounded-2xl border border-border/50 transition-luxury hover:glow-effect">
               <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Secure & Reliable</h3>
-              <p className="text-muted-foreground">Enterprise-grade security with 99.9% uptime guarantee.</p>
+              <p className="text-muted-foreground">
+                Built with user security and reliability in mind.
+              </p>
             </div>
           </div>
         </div>

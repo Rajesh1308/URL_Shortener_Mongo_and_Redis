@@ -3,11 +3,21 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Link2, Eye, EyeOff } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,16 +28,43 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    if (!email || !password) {
       toast({
-        title: "Login successful!",
-        description: "Welcome back to your URL shortener.",
+        title: "Missing fields",
+        description: "Please enter both email and password",
+        variant: "destructive",
       });
-      // In real app, redirect to dashboard
-      window.location.href = "/dashboard";
-    }, 1500);
+      return;
+    }
+
+    // Simulate API call
+    const loginRequest = async () => {
+      try {
+        const response = await axios.post(
+          `${API_URL}/auth/login`,
+          {
+            email: email,
+            password: password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+        if (response.data.success) {
+          navigate("/dashboard");
+        } else {
+          toast({
+            title: "Login failed",
+            description: response.data.error.message,
+            variant: "destructive",
+          });
+        }
+      } catch (e) {
+        console.log("Error : ", e.message);
+      }
+    };
+    loginRequest();
+    setIsLoading(false);
   };
 
   return (
@@ -38,7 +75,9 @@ const Login = () => {
             <Link2 className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+          <p className="text-muted-foreground">
+            Sign in to your account to continue
+          </p>
         </div>
 
         <Card className="glass-card border-border/50 shadow-luxury">
@@ -100,7 +139,10 @@ const Login = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-primary hover:underline transition-smooth">
+                <Link
+                  to="/signup"
+                  className="text-primary hover:underline transition-smooth"
+                >
                   Sign up here
                 </Link>
               </p>

@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  handleCustomIdCheck,
+  handleCustomShortId,
   handleDeleteUrl,
   handleGenerateNewShortURL,
   handleGetAnalytics,
@@ -15,7 +17,7 @@ import shortIdValidate from "../middlewares/validateShortUrl.js";
 // Create a new connection in every instance
 const dbUpdateQueue = new Queue("db-update", {
   connection: {
-    host: "localhost",
+    host: process.env.REDIS_HOST,
     port: 6379,
   },
 });
@@ -36,6 +38,10 @@ router.get("/get-urls", userAuth, handleGetUrls);
 router.delete("/delete", userAuth, shortIdValidate, handleDeleteUrl);
 
 router.put("/updateUrl", userAuth, shortIdValidate, handleUpdateRedirectUrl);
+
+router.post("/custom", userAuth, handleCustomShortId);
+
+router.post("/custom-id-check", userAuth, handleCustomIdCheck);
 
 export default router;
 

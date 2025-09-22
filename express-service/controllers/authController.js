@@ -31,16 +31,18 @@ export const handleSignup = async (req, res) => {
     await newUser.save();
 
     // Send JWT token
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+    //   expiresIn: "7d",
+    // });
+    // console.log(process.env.NODE_ENV === "production");
+    // console.log(process.env.NODE_ENV === "production" ? "strict" : "lax");
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    //   maxAge: 7 * 24 * 60 * 60 * 1000,
+    // });
 
     return res.json({
       success: true,
@@ -92,7 +94,7 @@ export const handleLogin = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 24 * 7 * 60 * 60 * 1000,
     });
     res.json({

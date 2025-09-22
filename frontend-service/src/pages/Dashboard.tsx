@@ -2,12 +2,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, LogOut, Copy, ExternalLink, Edit, Trash2, BarChart3 } from "lucide-react";
+import {
+  Link2,
+  Plus,
+  LogOut,
+  Copy,
+  ExternalLink,
+  Edit,
+  Trash2,
+  BarChart3,
+} from "lucide-react";
 import { URLTable } from "@/components/URLTable";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
-
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 interface URLData {
   id: string;
   originalUrl: string;
@@ -23,6 +40,7 @@ const Dashboard = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [urls, setUrls] = useState<URLData[]>([
     {
@@ -31,15 +49,15 @@ const Dashboard = () => {
       shortUrl: "https://short.ly/gh-next",
       clicks: 1247,
       createdAt: "2024-01-15T10:30:00Z",
-      title: "Next.js Repository"
+      title: "Next.js Repository",
     },
     {
-      id: "2", 
+      id: "2",
       originalUrl: "https://docs.react.dev/learn",
       shortUrl: "https://short.ly/react-docs",
       clicks: 892,
       createdAt: "2024-01-14T14:22:00Z",
-      title: "React Documentation"
+      title: "React Documentation",
     },
     {
       id: "3",
@@ -47,8 +65,8 @@ const Dashboard = () => {
       shortUrl: "https://short.ly/tw-install",
       clicks: 564,
       createdAt: "2024-01-13T09:15:00Z",
-      title: "Tailwind CSS Installation"
-    }
+      title: "Tailwind CSS Installation",
+    },
   ]);
 
   const handleCreateUrl = async (e: React.FormEvent) => {
@@ -60,13 +78,15 @@ const Dashboard = () => {
       const newUrl: URLData = {
         id: Date.now().toString(),
         originalUrl: longUrl,
-        shortUrl: `https://short.ly/${customAlias || Math.random().toString(36).substr(2, 8)}`,
+        shortUrl: `https://short.ly/${
+          customAlias || Math.random().toString(36).substr(2, 8)
+        }`,
         clicks: 0,
         createdAt: new Date().toISOString(),
-        title: customAlias || "New URL"
+        title: customAlias || "New URL",
       };
 
-      setUrls(prev => [newUrl, ...prev]);
+      setUrls((prev) => [newUrl, ...prev]);
       setLongUrl("");
       setCustomAlias("");
       setIsCreating(false);
@@ -79,7 +99,7 @@ const Dashboard = () => {
   };
 
   const handleDeleteUrl = (id: string) => {
-    setUrls(prev => prev.filter(url => url.id !== id));
+    setUrls((prev) => prev.filter((url) => url.id !== id));
     if (selectedUrl?.id === id) {
       setSelectedUrl(null);
     }
@@ -90,12 +110,22 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    toast({
-      title: "Logged out successfully",
-      description: "See you next time!",
-    });
     // In real app, clear auth state and redirect
-    window.location.href = "/login";
+    const logoutRequest = async () => {
+      try {
+        const response = await axios.post(`${API_URL}/auth/logout`);
+        if (response.data.success) {
+          toast({
+            title: "Logged out successfully",
+            description: "See you next time!",
+          });
+          navigate("/login");
+        }
+      } catch (e) {
+        console.log("Error : ", e.message);
+      }
+    };
+    logoutRequest();
   };
 
   return (
@@ -109,7 +139,9 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold">URL Shortener</h1>
-              <p className="text-muted-foreground">Manage your shortened URLs</p>
+              <p className="text-muted-foreground">
+                Manage your shortened URLs
+              </p>
             </div>
           </div>
           <Button
@@ -200,9 +232,7 @@ const Dashboard = () => {
                 <BarChart3 className="w-5 h-5 mr-2" />
                 Analytics for {selectedUrl.title || selectedUrl.shortUrl}
               </CardTitle>
-              <CardDescription>
-                Click analytics over time
-              </CardDescription>
+              <CardDescription>Click analytics over time</CardDescription>
             </CardHeader>
             <CardContent>
               <AnalyticsChart selectedUrl={selectedUrl} />

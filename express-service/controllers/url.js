@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 // Create a new connection in every instance
 const dbUpdateQueue = new Queue("db-update", {
   connection: {
-    host: "localhost",
+    host: process.env.REDIS_HOST,
     port: 6379,
   },
 });
@@ -25,7 +25,52 @@ export const handleGenerateNewShortURL = async (req, res) => {
     createdBy: new mongoose.Types.ObjectId(req.userId),
   });
 
-  return res.json({ id: shortID });
+  return res.json({
+    success: true,
+    message: `Short ID Created - ${shortID}`,
+  });
+};
+
+export const handleCustomShortId = async (req, res) => {
+  const customId = req.body.customId;
+  const redirectUrl = req.body.redirectUrl;
+
+  const isExist = await URL.findOne({ shortId: customId });
+  if (isExist) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Short ID already exist",
+      },
+    });
+  }
+  const entry = await URL.create({
+    shortId: customId,
+    redirectUrl: redirectUrl,
+    visitHistory: [],
+    createdBy: new mongoose.Types.ObjectId(req.userId),
+  });
+  return res.json({
+    success: true,
+    message: "Custom ID created",
+  });
+};
+
+export const handleCustomIdCheck = async (req, res) => {
+  const customId = req.body.customId;
+  const isExist = await URL.findOne({ shortId: customId });
+  if (isExist) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Short ID already exist",
+      },
+    });
+  }
+  return res.json({
+    success: true,
+    message: "Id does not exist",
+  });
 };
 
 export const handleGetAnalytics = async (req, res) => {
