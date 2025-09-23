@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [selectedUrl, setSelectedUrl] = useState<URLData | null>(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editUrlValue, setEditUrlValue] = useState("");
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [refresh, setRefresh] = useState(false);
   const { toast } = useToast();
@@ -120,9 +121,13 @@ const Dashboard = () => {
           variant: "destructive",
         });
       }
+      setIsCreating(false);
     } catch (e) {
       console.log("Error : ", e.message);
     }
+    setCustomAlias("");
+    setTitle("");
+    setLongUrl("");
   };
 
   const handleEditUrl = async (id: string) => {
@@ -164,17 +169,24 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteUrl = async (id: string) => {
+  const handleRemoveUrl = (id: string) => {
+    console.log("Removing");
+    setOpenDeleteModal(true);
+    setSelectedId(id);
+  };
+
+  const handleDeleteUrl = async () => {
+    console.log("Deleting call");
     try {
       const response = await axios.delete(`${API_URL}/url/delete`, {
         data: {
-          shortId: id,
+          shortId: selectedId,
         },
         withCredentials: true,
       });
       if (response.data.success) {
-        setUrls((prev) => prev.filter((url) => url.id !== id));
-        if (selectedUrl?.id === id) {
+        setUrls((prev) => prev.filter((url) => url.id !== selectedId));
+        if (selectedUrl?.id === selectedId) {
           setSelectedUrl(null);
         }
         setRefresh((prev) => !prev);
@@ -189,6 +201,7 @@ const Dashboard = () => {
           variant: "destructive",
         });
       }
+      setOpenDeleteModal(false);
     } catch (e) {
       console.log("Error : ", e.message);
     }
@@ -316,7 +329,7 @@ const Dashboard = () => {
               urls={urls}
               onSelectUrl={setSelectedUrl}
               onEditUrl={handleEditUrl}
-              onDeleteUrl={handleDeleteUrl}
+              onDeleteUrl={handleRemoveUrl}
               selectedUrl={selectedUrl}
             />
           </CardContent>
@@ -366,6 +379,31 @@ const Dashboard = () => {
                 className="px-4 py-2 border border-white bg-black text-white rounded hover:bg-white hover:text-black"
               >
                 Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {openDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-black border border-grey-500 rounded-lg shadow-lg w-full max-w-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Delete URL</h2>
+            <div className="mb-4">
+              <p>Are you sure in deleting this URl?</p>
+              <p>This action is irreversible.</p>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setOpenDeleteModal(false)}
+                className="px-4 py-2 bg-gray-200 rounded text-black hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteUrl()}
+                className="px-4 py-2 border border-white bg-red-500 text-white rounded hover:bg-red-700 hover:text-white"
+              >
+                Delete
               </button>
             </div>
           </div>

@@ -12,6 +12,60 @@ const dbUpdateQueue = new Queue("db-update", {
   },
 });
 
+export const handleUrlRedirect = async (req, res) => {
+  const shortId = req.params.shortId;
+  const ip = req.ip;
+
+  try {
+    const cachedEntry = await client.get(shortId);
+    const cacheIpRequest = await client.get(`${ip}-${shortId}`);
+    console.log(cacheIpRequest);
+
+    if (cachedEntry) {
+      console.log("Cache hit");
+      const redisEntry = JSON.parse(cachedEntry);
+
+      if (cacheIpRequest === null) {
+        console.log("Adding");
+        await dbUpdateQueue.add("log-visit", {
+          shortId: shortId,
+          timestamp: Date.now(),
+        });
+        client.set(`${ip}-${shortId}`, shortId, { EX: 5 });
+      } else {
+        console.log("No addding because of continuos request");
+      }
+
+      return res.redirect(redisEntry.redirectUrl);
+    }
+
+    console.log("Cache Miss");
+
+    const entry = await URL.findOneAndUpdate(
+      {
+        shortId,
+      },
+      {
+        $push: {
+          visitHistory: {
+            timestamp: Date.now(),
+          },
+        },
+      }
+    );
+    if (!entry) {
+      return res.status(404).json({
+        error: "We can't find you the right URL. Please check the URL again.",
+      });
+    }
+    client.set(`${ip}-${shortId}`, shortId, { EX: 5 });
+    client.set(shortId, JSON.stringify(entry), { EX: 3600 });
+    return res.redirect(entry.redirectUrl);
+  } catch (e) {
+    console.log("Error fetching or addig data to queue : ", e);
+  }
+};
+
 export const handleGenerateNewShortURL = async (req, res) => {
   const body = req.body;
   if (!body.url || !body.title) {
@@ -93,48 +147,6 @@ export const handleGetAnalytics = async (req, res) => {
     totalClicks: result.visitHistory.length,
     analytics: result.visitHistory,
   });
-};
-
-export const handleUrlRedirect = async (req, res) => {
-  const shortId = req.params.shortId;
-
-  try {
-    const cachedEntry = await client.get(shortId);
-
-    if (cachedEntry) {
-      console.log("Cache hit");
-      const redisEntry = JSON.parse(cachedEntry);
-
-      await dbUpdateQueue.add("log-visit", {
-        shortId: shortId,
-        timestamp: Date.now(),
-      });
-
-      return res.redirect(redisEntry.redirectUrl);
-    }
-
-    console.log("Cache Miss");
-
-    const entry = await URL.findOneAndUpdate(
-      {
-        shortId,
-      },
-      {
-        $push: {
-          visitHistory: {
-            timestamp: Date.now(),
-          },
-        },
-      }
-    );
-    if (!entry) {
-      return res.status(404).json({ error: "Short URL not found - In cache" });
-    }
-    client.set(shortId, JSON.stringify(entry), { EX: 3600 });
-    return res.redirect(entry.redirectUrl);
-  } catch (e) {
-    console.log("Error fetching or addig data to queue : ", e);
-  }
 };
 
 export const handleGetUrls = async (req, res) => {
