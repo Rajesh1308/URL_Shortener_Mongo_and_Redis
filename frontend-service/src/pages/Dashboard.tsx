@@ -158,11 +158,12 @@ const Dashboard = () => {
       } else {
         toast({
           title: "Failed to update",
-          description: "The Original URL is not updated",
+          description: response.data.error.message,
           variant: "destructive",
         });
       }
       console.log(response.data);
+      setEditUrlValue("");
       setOpenEditModal(false);
     } catch (e) {
       console.log("Error : ", e.message);

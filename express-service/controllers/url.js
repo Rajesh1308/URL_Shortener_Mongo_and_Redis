@@ -69,7 +69,20 @@ export const handleUrlRedirect = async (req, res) => {
 export const handleGenerateNewShortURL = async (req, res) => {
   const body = req.body;
   if (!body.url || !body.title) {
-    return res.status(400).json({ error: "url and title is required" });
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: "URL and title is required",
+      },
+    });
+  }
+  if (body.url.trim().includes(" ")) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: "Imporper URL format",
+      },
+    });
   }
   const shortID = nanoid(8);
   await URL.create({
@@ -88,15 +101,46 @@ export const handleGenerateNewShortURL = async (req, res) => {
 };
 
 export const handleCustomShortId = async (req, res) => {
-  const customId = req.body.customId;
-  const redirectUrl = req.body.redirectUrl;
+  const customId = req.body.customId.trim();
+  const redirectUrl = req.body.redirectUrl.trim();
   const title = req.body.title;
+  const reserved = [
+    "url",
+    "updateUrl",
+    "delete",
+    "login",
+    "signup",
+    "logout",
+    "auth",
+    "custom-id-check",
+    "custom",
+    "get-urls",
+    "api",
+  ];
 
   if (!customId || !redirectUrl || !title) {
     return res.json({
       success: false,
       error: {
         message: "Missing required arguments",
+      },
+    });
+  }
+
+  if (customId.includes(" ") || redirectUrl.includes(" ")) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Improper format of url or alias",
+      },
+    });
+  }
+
+  if (reserved.includes(customId)) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Custom Id not allowed",
       },
     });
   }
@@ -196,12 +240,20 @@ export const handleDeleteUrl = async (req, res) => {
 
 export const handleUpdateRedirectUrl = async (req, res) => {
   const shortId = req.body.shortId;
-  const updatedRedirectUrl = req.body.newUrl;
+  const updatedRedirectUrl = req.body.newUrl.trim();
   if (!shortId || !updatedRedirectUrl) {
     return res.json({
       success: false,
       error: {
         message: "shortId and update Url is required",
+      },
+    });
+  }
+  if (updatedRedirectUrl.includes(" ")) {
+    return res.json({
+      success: false,
+      error: {
+        message: "Improper URL format",
       },
     });
   }
