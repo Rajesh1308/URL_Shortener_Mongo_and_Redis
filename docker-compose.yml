@@ -1,18 +1,4 @@
 services:
-  redis:
-    image: "redis"
-    container_name: "redis"
-    ports:
-      - "6379:6379"
-
-  mongodb:
-    image: "mongo:6"
-    container_name: "mongo"
-    ports:
-      - 5010:27017
-    volumes:
-      - mongo-data:/data/db
-
   express-service:
     build: ./express-service
     container_name: express-service
@@ -51,6 +37,20 @@ services:
       - VITE_API_URL=http://localhost:8000
     depends_on:
       - express-service
+
+  redis:
+    image: "redis"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+
+  mongodb:
+    image: "mongo:6"
+    container_name: "mongo"
+    ports:
+      - 5010:27017
+    volumes:
+      - mongo-data:/data/db
 
 volumes:
   mongo-data:
