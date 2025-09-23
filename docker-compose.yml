@@ -8,6 +8,10 @@ services:
   mongodb:
     image: "mongo:6"
     container_name: "mongo"
+    ports:
+      - 5010:27017
+    volumes:
+      - mongo-data:/data/db
 
   express-service:
     build: ./express-service
@@ -25,6 +29,7 @@ services:
     depends_on:
       - "redis"
       - "mongodb"
+      - "worker-service"
 
   worker-service:
     build: ./worker-service
@@ -36,3 +41,16 @@ services:
     depends_on:
       - redis
       - mongodb
+
+  frontend-service:
+    build: ./frontend-service
+    container_name: frontend-service
+    ports:
+      - "8080:8080"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - express-service
+
+volumes:
+  mongo-data:

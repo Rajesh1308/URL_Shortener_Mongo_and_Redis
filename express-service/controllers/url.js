@@ -80,7 +80,7 @@ export const handleGenerateNewShortURL = async (req, res) => {
     return res.status(400).json({
       success: false,
       error: {
-        message: "Imporper URL format",
+        message: "Improper URL format",
       },
     });
   }
@@ -257,7 +257,7 @@ export const handleUpdateRedirectUrl = async (req, res) => {
       },
     });
   }
-  const entry = await URL.findOneAndUpdate(
+  let entry = await URL.findOneAndUpdate(
     {
       shortId,
     },
@@ -265,6 +265,7 @@ export const handleUpdateRedirectUrl = async (req, res) => {
       redirectUrl: updatedRedirectUrl,
     }
   );
+  entry = await URL.findOne({ shortId });
   if (!entry) {
     return res.json({
       success: false,
@@ -273,6 +274,9 @@ export const handleUpdateRedirectUrl = async (req, res) => {
       },
     });
   }
+  client.set(shortId, JSON.stringify(entry), {
+    EX: 3600,
+  });
   const message = {
     shortId: shortId,
     redirectUrl: updatedRedirectUrl,

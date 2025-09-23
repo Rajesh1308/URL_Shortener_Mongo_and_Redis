@@ -81,7 +81,7 @@ export const handleLogin = async (req, res) => {
 
     if (!isMatch) {
       return res.json({
-        success: true,
+        success: false,
         error: {
           message: "Incorrect email or password",
         },
